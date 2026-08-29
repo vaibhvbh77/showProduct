@@ -1,8 +1,9 @@
 // showProduct REST API
 // Returns mock product details in JSON format
-// Run: node server.js  (listens on port 80 so it works behind the ALB/health check without extra config)
+// Run: node server.js  (listens on port 80)
 
 const express = require("express");
+const crypto = require("crypto");
 const os = require("os");
 const app = express();
 const PORT = process.env.PORT || 80;
@@ -16,15 +17,28 @@ const products = [
   { id: 5, name: "Bluetooth Speaker", category: "Electronics", price: 45.0, stock: 60 },
 ];
 
-// Health check endpoint (useful for ALB target group health checks)
+// Simulates realistic CPU work (e.g. hashing/validation a real API might do)
+// so that load testing produces a genuine, demonstrable CPU spike.
+// Tune ITERATIONS up/down to control how much CPU each request burns.
+function simulateWork() {
+  const ITERATIONS = 20000;
+  let hash = "seed";
+  for (let i = 0; i < ITERATIONS; i++) {
+    hash = crypto.createHash("sha256").update(hash + i).digest("hex");
+  }
+  return hash;
+}
+
+// Health check endpoint (kept lightweight on purpose, for fast LB/MIG health checks)
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok", host: os.hostname() });
 });
 
 // Main API: return all products
 app.get("/showProduct", (req, res) => {
+  simulateWork(); // artificial CPU load per request
   res.status(200).json({
-    servedBy: os.hostname(), // helpful during the demo to prove requests hit different instances
+    servedBy: os.hostname(),
     count: products.length,
     products: products,
   });
@@ -32,6 +46,7 @@ app.get("/showProduct", (req, res) => {
 
 // Return a single product by ID
 app.get("/showProduct/:id", (req, res) => {
+  simulateWork();
   const product = products.find((p) => p.id === parseInt(req.params.id));
   if (!product) {
     return res.status(404).json({ error: "Product not found" });
