@@ -1,0 +1,12 @@
+{
+  "name": "showproduct-api",
+  "version": "1.0.0",
+  "description": "Mock showProduct REST API for CS/SS G527 Cloud Computing assignment",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.22.2"
+  }
+}
